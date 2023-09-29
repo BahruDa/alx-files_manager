@@ -1,17 +1,12 @@
-// module contains class RedisClient Redis utils :-get, set, del methods
-const redis = require('redis');
-const { promisify } = require('util');
+import redis from 'redis';
+import { promisify } from 'util';
 
 class RedisClient {
   constructor() {
     this.client = redis.createClient();
-    this.client.on('error', (err) => {
-      console.log('Redis client not connected to the server:', err);
-    });
+    this.client.on('error', (err) => console.log(err));
+
     this.getAsync = promisify(this.client.get).bind(this.client);
-    this.setAsync = promisify(this.client.set).bind(this.client);
-    this.expireAsync = promisify(this.client.expire).bind(this.client);
-    this.delAsync = promisify(this.client.del).bind(this.client);
   }
 
   isAlive() {
@@ -19,18 +14,17 @@ class RedisClient {
   }
 
   async get(key) {
-    const val = await this.getAsync(key);
-    return val;
+    return this.getAsync(key);
   }
 
-  async set(key, val, dur) {
-    this.setAsync(key, val);
-    this.expireAsync(key, dur);
+  async set(key, value, duration) {
+    return this.client.setex(key, duration, value);
   }
 
   async del(key) {
-    this.delAsync(key);
+    return this.client.del(key);
   }
 }
+
 const redisClient = new RedisClient();
 module.exports = redisClient;
